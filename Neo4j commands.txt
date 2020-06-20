@@ -1,0 +1,25 @@
+CREATE (u1:User{id:row._start})-[:relation]->(u2:User{id:row._end})
+
+
+
+LOAD CSV WITH HEADERS FROM 'file:///user_graph.csv' AS row
+with row,[key in keys(row) where key starts with '_start' and row[key] is not null] as key,row._type as relation
+
+
+
+Match(n:User)
+Return n.name as name,labels(n) as type;
+
+match(n:User)-[r]->(n2:User)
+return n as source,type(r) as relation,n2 as destination
+
+
+load csv with headers from "file:///nodes_relationships.csv" as nodes_relations
+with nodes_relations.source as source_node,nodes_relations.destination as destination_node,nodes_relations.relation as relation_of_node
+match(a:User{name:source_node}),(b:User{name:destination_node})
+create (a)-[r:reltype{type:relation_of_node}]->(b)
+return a,b,r
+
+load csv with headers from "file:///nodes.csv" as nodes
+with nodes.type as typeNode,nodes.name as nameofNode
+create (a:User{name:nameofNode})
